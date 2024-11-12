@@ -4,7 +4,7 @@ import axios from 'axios';
 import { FaTrash } from 'react-icons/fa';
 
 const Home: React.FC = () => {
-  const [todos, setTodos] = useState<{ _id: string; task: string; __v: number }[]>([]); 
+  const [todos, setTodos] = useState<{ _id: string; task: string; __v: number; completed: boolean }[]>([]);
 
   useEffect(() => {
     axios.get('http://localhost:3001/get')
@@ -12,16 +12,20 @@ const Home: React.FC = () => {
       .catch((err) => console.log(err));
   }, []);
 
-  const handleDelete = (index: number) => {
-    setTodos((prevTodos) => prevTodos.filter((_, i) => i !== index));
+  const handleDelete = (_id: string) => {
+    setTodos((prevTodos) => prevTodos.filter((todo) => todo._id !== _id));
   };
 
-  const handleToggleComplete = (index: number) => {
-    // Implement logic to toggle the completion status of a todo
+  const handleToggleComplete = (_id: string) => {
+    setTodos((prevTodos) =>
+      prevTodos.map((todo) =>
+        todo._id === _id ? { ...todo, completed: !todo.completed } : todo
+      )
+    );
   };
 
   const addTodo = (newTask: string) => {
-    setTodos((prevTodos) => [...prevTodos, { _id: Date.now().toString(), task: newTask, __v: 0 }]);
+    setTodos((prevTodos) => [...prevTodos, { _id: Date.now().toString(), task: newTask, __v: 0, completed: false }]);
   };
 
   return (
@@ -36,18 +40,21 @@ const Home: React.FC = () => {
             <h2 className="text-gray-500">No Records</h2>
           </div>
         ) : (
-          todos.map((todo, index) => (
+          todos.map((todo) => (
             <div
-              key={todo._id} 
+              key={todo._id}
               className="flex items-center p-2 border border-gray-200 rounded-md text-center mt-2 space-x-2"
             >
               <input
                 type="checkbox"
                 className="form-checkbox h-5 w-5 text-blue-600"
-                onChange={() => handleToggleComplete(index)} 
+                checked={todo.completed}
+                onChange={() => handleToggleComplete(todo._id)}
               />
-              <span className="flex-1 text-left">{todo.task}</span> 
-              <button onClick={() => handleDelete(index)} className="text-red-500 hover:text-red-700">
+              <span className={`flex-1 text-left ${todo.completed ? 'line-through text-gray-400' : ''}`}>
+                {todo.task}
+              </span>
+              <button onClick={() => handleDelete(todo._id)} className="text-red-500 hover:text-red-700">
                 <FaTrash />
               </button>
             </div>
